@@ -1,0 +1,20 @@
+giraffe
+rhino
+tiger
+ostrich
+whale
+hummingbird
+rhinoceros
+orangutan
+chimpanzee
+gazelle
+grizzly bear
+bullfrog
+leopard
+bluebird
+cardinal
+bald eagle
+stingray
+aardvark
+mongoose
+warthog
