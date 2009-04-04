@@ -1,0 +1,19 @@
+Chetan Sarva :: http://github.com/chetan 
+
+My Plugins for rbot - a Ruby IRC bot :: http://www.ruby-rbot.org/
+
+* bo.rb (boxoffice) - Movie box office information
+* debt.rb - Looks up the US national debt
+* fmylife.rb - Get posts from fmylife.com
+* idlerpg.rb - Get status for user in efnet's #idlerpg game
+* mlb.rb - MLB stats and scores
+* nba.rb - NBA stats and scores
+* nfl.rb - NFL stats and scores
+* nhl.rb - NHL stats and scores
+* oil.rb - Gets crude oil price from bloomberg.com
+* rotten.rb - Lookup movies on rottentomatoes.com
+* scrambler.rb - A game where users compete to unscramble words as fast as possible
+* stocks.rb - Lookup stock prices on Yahoo! finance
+* tiny_weather.rb - A minimalist weather script
+* wikipedia.rb - Lookup articles on wikipedia and get a summary
+
