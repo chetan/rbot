@@ -11,21 +11,21 @@ module PluginLib
 
     OUR_UNSAFE = Regexp.new("[^#{URI::PATTERN::UNRESERVED}#{URI::PATTERN::RESERVED}%# ]", false, 'N')
     
-    Config.register Config::StringValue.new('pixelcop.db.host',
-                                            :default => 'localhost',
-                                            :desc => "MySQL DB hostname or IP")
+    Irc::Bot::Config.register Irc::Bot::Config::StringValue.new('pixelcop.db.host',
+                                                                :default => 'localhost',
+                                                                :desc => "MySQL DB hostname or IP")
 
-    Config.register Config::StringValue.new('pixelcop.db.name',
-                                            :default => 'rbot',
-                                            :desc => "MySQL DB name")
+    Irc::Bot::Config.register Irc::Bot::Config::StringValue.new('pixelcop.db.name',
+                                                                :default => 'rbot',
+                                                                :desc => "MySQL DB name")
                                             
-    Config.register Config::StringValue.new('pixelcop.db.user',
-                                            :default => 'rbot',
-                                            :desc => "MySQL DB username")
+    Irc::Bot::Config.register Irc::Bot::Config::StringValue.new('pixelcop.db.user',
+                                                                :default => 'rbot',
+                                                                :desc => "MySQL DB username")
                                             
-    Config.register Config::StringValue.new('pixelcop.db.pass',
-                                            :default => 'rbot',
-                                            :desc => "MySQL DB password")
+    Irc::Bot::Config.register Irc::Bot::Config::StringValue.new('pixelcop.db.pass',
+                                                                :default => 'rbot',
+                                                                :desc => "MySQL DB password")
     
     def extract_urls(m)
     
@@ -34,11 +34,13 @@ module PluginLib
     
     end
     
-    def connect_db    
+    def connect_db
         host = @bot.config['pixelcop.db.host']
         name = @bot.config['pixelcop.db.name']
         user = @bot.config['pixelcop.db.user']
         pass = @bot.config['pixelcop.db.pass']
+
+        puts sprintf("getting db connection with %s, %s, %s, %s", host, name, user, pass)
 
         str = sprintf('DBI:Mysql:database=%s;host=%s', name, host)
         return DBI.connect(str, user, pass)
@@ -62,6 +64,7 @@ module PluginLib
         begin
         
             dbh = connect_db()
+            puts "got dbh"
             
             # don't insert of url already exists
             q = dbh.prepare('SELECT * from urls where url = ?')
