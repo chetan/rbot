@@ -43,12 +43,21 @@ class TinyWeatherPlugin < Plugin
 
         s = [w.location]
         i = 0
+        precip = 0
         w.hours.each { |h|
             i += 1
+            precip = h.precip.to_i if h.precip.to_i > precip
             next if i % 2 == 0
             s << sprintf("%s: %s (%s)", h.hour, h.temp, h.precip)
-            
         }
+        
+        if precip < 30 then
+            s << "no rain :)"
+        elsif precip == 30 or precip == 40 then
+            s << "might want that umbrella"
+        else
+            s << "grab an umbrella!"
+        end
 				
 		m.reply s.join('   ')
 		
