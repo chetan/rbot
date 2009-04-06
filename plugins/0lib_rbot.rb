@@ -40,8 +40,6 @@ module PluginLib
         user = @bot.config['pixelcop.db.user']
         pass = @bot.config['pixelcop.db.pass']
 
-        puts sprintf("getting db connection with %s, %s, %s, %s", host, name, user, pass)
-
         str = sprintf('DBI:Mysql:database=%s;host=%s', name, host)
         return DBI.connect(str, user, pass)
     end
@@ -64,7 +62,6 @@ module PluginLib
         begin
         
             dbh = connect_db()
-            puts "got dbh"
             
             # don't insert of url already exists
             q = dbh.prepare('SELECT * from urls where url = ?')
