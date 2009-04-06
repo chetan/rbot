@@ -17,15 +17,24 @@ class TinyWeatherPlugin < Plugin
 	end
 	
 	def help(plugin, topic="")
-		return "tw <zip> => get hourly forecast from weather.com"
+		return "tw [zip] => get hourly forecast from weather.com; tw default <zip> => set your default zipcode"
 	end
 
 	def do_tiny_weather(m, params)
 		
 		if params[:zip] then
             url = @url + params[:zip]
+            
+            # store it if we have nothing on file for them
+            if not @registry.has_key? m.sourceaddress then
+                @registry[m.sourceaddress] = params[:zip]
+                m.reply "hi %s. I went ahead and set %s as your default zip. You can change it with the command tw default <zip>" % [ m.sourcenick, params[:zip] ]
+            end
+            
+        elsif @registry.has_key? m.sourceaddress then
+            url = @url + @registry[m.sourceaddress]
         else
-            return m.reply "zipcode is required!"
+            return m.reply "zipcode is required the first time you call me"
 		end
 		
 		w = scrape_weather(url)
@@ -43,6 +52,20 @@ class TinyWeatherPlugin < Plugin
 				
 		m.reply s.join('   ')
 		
+	end
+	
+	def do_set_default(m, params)
+	
+	    if not params[:zip] then
+	        return m.reply "%s, I can't very well set a new default for you without a zipcode, can I?" % m.sourcenick
+	    end
+
+	    @registry[m.sourceaddress] = params[:zip]
+	    m.reply "%s, your default zip has been set to %s" % [ m.sourcenick, params[:zip] ]
+	    
+	    # and give em the weather while we're at it
+	    do_tiny_weather(m, params)
+	    
 	end
 	
 	def scrape_weather(url)
@@ -71,8 +94,10 @@ class TinyWeatherPlugin < Plugin
        
 	end
 	
-end 
+end
 
 plugin = TinyWeatherPlugin.new
-plugin.map 'tw :zip', :action => 'do_tiny_weather'
+plugin.map 'tw default :zip', :action => 'do_set_default'
+plugin.map 'tw [:zip]', :action => 'do_tiny_weather'
+
 
