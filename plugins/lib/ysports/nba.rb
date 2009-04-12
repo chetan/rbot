@@ -1,4 +1,6 @@
 
+require 'scrapi'
+
 module YSports
 
 class NBA < Base
@@ -59,21 +61,17 @@ class NBA < Base
 		# already got html and team name?
 		
 		info = {}
-		
-		# get team name, conference (during playoffs), and ranking
-		nm = %r_<h3>(.*?)</h3>\s+(<p class="team-conference">(.*?)</p>\s+)?<p class="team-standing">(.*?)</p>_m.match(html)
-		
-		info['name'] = nm[1]
-		
-		if nm[0].include? 'team-conference' then
-		    # playoffs!
-		    info['conference'] = nm[3].strip
-		    info['rank'] = nm[4].strip
-		else
-		    info['rank'] = nm[3].strip if nm[3]
+
+		team_scraper = Scraper.define do
+		    process_first "h1.yspseohdln", :name => :text
+		    process_first "p.team-standing", :rank => :text
 		end
-		
-		
+
+	    team = team_scraper.scrape(html)
+	    info['name'] = team.name
+	    info['rank'] = team.rank
+
+        # TODO: replace with scrapi		
 		# get last 5 games and next 5 games
 		
 		games = html.scan(%r_<tr class="ysprow\d"><td class=yspscores>&nbsp;(.*?)</td><td class=yspscores nowrap>(.*?)<a href="/\w{3}/teams/.*?">(.*?)</a></td><td align=right class=yspscores nowrap>((<a href=/\w{3}/\w+\?gid=\d+>(.*?)</a>)|(.*?)&nbsp;</td></tr>)_)
