@@ -63,6 +63,7 @@ class WikiPediaPlugin < Plugin
     if m.message =~ %r|http://en.wikipedia.org/wiki/([^ ]+)|
 		# found a wikipedia link
         title = $1
+        return if title =~ /^File:/
         begin
             m.reply "#{title}: " + shorten( title, get_article(title) )
         rescue
