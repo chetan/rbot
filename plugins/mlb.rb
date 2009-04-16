@@ -26,13 +26,33 @@ class MlbPlugin < Plugin
 
         params[:teams].each { |t|
 
-		team = YSports::MLB.get_team_stats(t)
-		
-		last = team.last5[-1]
-		last_s = sprintf("%s - %s", last.team, last.status)
-		last_s = "at " + last_s if last.away
-		
-		m.reply sprintf("%s (%s): %s", team.name, team.standing, last_s)
+            team = YSports::MLB.get_team_stats(t)
+            
+            if team.live.nil? then
+                last = team.last5[-1]
+                last_s = sprintf("%s - %s", last.team, last.status)
+                last_s = "at " + last_s if last.away
+            else
+                # there is a live game
+                game = team.live
+                live_team = (game.home ? 
+                             'vs ' + game.away_team.name : 
+                             'at ' + game.home_team.name)
+
+                if game.inning !~ /Final/ then
+                    status = sprintf("[LIVE, %s] ", game.inning)
+                else
+                    status = ''
+                end
+                
+                last_s = sprintf("%s%s %s - %s", 
+                                 status,
+                                 live_team, 
+                                 game.away_team.runs, 
+                                 game.home_team.runs)
+            end
+            
+            m.reply sprintf("%s (%s): %s", team.name, team.standing, last_s)
 
         }
 		

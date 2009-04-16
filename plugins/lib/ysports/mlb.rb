@@ -61,9 +61,6 @@ class MLB < Base
         
         
         info_scraper = Scraper.define do
-        
-            array :teams
-            array :scores
             
             process "h1.yspseohdln:first-child", :name => :text
             process "p.team-standing", :standing => :text
@@ -112,11 +109,76 @@ class MLB < Base
             
         }
         
+        live_game = get_live_game(info.name, html)
+        
         return OpenStruct.new({:name => info.name,
                                :standing => info.standing,
                                :last5 => last5,
-                               :next5 => next5})
+                               :next5 => next5,
+                               :live  => live_game})
         
+    end
+    
+    def self.get_live_game(team, html)
+    
+        return nil if html !~ /In Progress Game/
+        
+        team_scraper = Scraper.define do
+           
+            process_first "td:nth-child(2)", :name => :text
+            process_first "td:nth-child(4)", :runs => :text
+            process_first "td:nth-child(5)", :hits => :text
+            process_first "td:nth-child(6)", :errors => :text
+            
+            result :name, :runs, :hits, :errors
+            
+        end
+        
+        live_scraper = Scraper.define do
+            array :teams
+            process_first "td.yspscores", :inning => :text
+            process "tr.ysptblclbg5", :teams => team_scraper
+            result :inning, :teams
+        end
+        
+        game = live_scraper.scrape(html)
+        game = struct_to_ostruct(game)
+        game.inning.strip!
+        
+        # they are at home if team 1 (2nd team) is them
+        if game.teams[1].name.split.size > 1 then
+            t = game.teams[1].name.split[-1]
+        else
+            t = game.teams[1].name
+        end
+        
+        if team.include? t then
+            # home game
+            game.home = true
+        else
+            game.home = false            
+        end
+
+        # helpers        
+        game.away_team = game.teams[0]
+        game.home_team = game.teams[1]
+        game.delete_field('teams')
+        
+        return game
+        
+    end
+    
+    def self.struct_to_ostruct(struct)
+        hash = {}
+        struct.each_pair { |key,val|
+            if val.kind_of? Struct then
+                val = struct_to_ostruct(val)
+            elsif val.kind_of? Array then
+                val.map! { |v| v.to_s =~ /struct/ ? struct_to_ostruct(v) : v }
+            end
+            hash[key] = val
+        }
+        return OpenStruct.new(hash)
     end
 
 end
