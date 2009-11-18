@@ -20,13 +20,14 @@ class StocksPlugin < Plugin
 		@google_url = 'http://finance.google.com/finance/match?matchtype=matchall&q='
 		
 		
+        # list at http://finance.yahoo.com/futures
         # gold: http://finance.yahoo.com/q/fc?s=GCX08.CMX
         # oil: http://finance.yahoo.com/q/fc?s=CLF09.NYM
         # corn: http://finance.yahoo.com/q/fc?s=CZ08.CBT
 
-        @misc = { 'gold' => 'GCK09.CMX', # may
-                  'oil'  => 'CLK09.NYM', # may
-                  'corn' => 'CK09.CBT' } # may
+        @misc = { 'gold' => 'GCX09.CMX', # nov
+                  'oil'  => 'CLZ09.NYM', # dec
+                  'corn' => 'CZ09.CBT' } # dec
 	end
 	
 	def help(plugin, topic="")
