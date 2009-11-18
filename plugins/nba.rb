@@ -8,7 +8,7 @@
 
 require 'uri/common'
 require 'yaml'
-require 'ysports'
+require 'yahoo_sports'
 require '0lib_rbot'
 
 class NbaPlugin < Plugin
@@ -27,15 +27,16 @@ class NbaPlugin < Plugin
   	# get latest results for a specific team
 	def nba_team(m, params)
 
-        begin
-            info = YSports::NBA.get_team_stats(params[:team])
-            last_game = info['last']
+        info = YahooSports::NBA.get_team_stats(params[:team])
+        last_game = info.last5[-1]
         
-            return m.reply( sprintf("%s (%s): %s, %s - %s", info['name'], info['rank'], last_game['date'].strftime('%a %b %d'), last_game['team'], last_game['score']) )
-            
-        rescue => ex
-            return m.reply(ex)
-        end
+        game_date = last_game.date.strftime('%a %b %d')
+        
+        ret = sprintf("%s (%s, %s): %s, %s%s - %s", 
+                      info.name, info.standing, info.position, 
+                      game_date, (last_game.away ? "at " : ""), last_game.team, last_game.status)
+        
+        return m.reply(ret)
 		
 	end
 	
@@ -144,7 +145,7 @@ class NbaPlugin < Plugin
 		
 		saved_teams.clear
 		teams.each { |t|
-			(team, html) = YSports::NBA.find_team_page(t)
+			(team, html) = YahooSports::NBA.find_team_page(t)
 			saved_teams.push(t) unless team.nil?
 		}
 		
@@ -155,7 +156,7 @@ class NbaPlugin < Plugin
 	
 	def nba_live(m, params)
 	
-	    games = YSports::NBA.get_homepage_games('live')
+	    games = YahooSports::NBA.get_homepage_games('live')
 	
 	    date = Time.parse(eastern_time().strftime('%Y%m%d'))
         show_games(m, games, date, "Live games: ")
@@ -164,7 +165,7 @@ class NbaPlugin < Plugin
 	
 	def nba_today(m, params)
 	
-	    games = YSports::NBA.get_homepage_games()
+	    games = YahooSports::NBA.get_homepage_games()
 	    
 	    date = Time.parse(eastern_time().strftime('%Y%m%d'))
         show_games(m, games, date, "Today's games: ")
@@ -173,7 +174,7 @@ class NbaPlugin < Plugin
 	
 	def nba_yesterday(m, params)
 	
-	    games = YSports::NBA.get_homepage_games()
+	    games = YahooSports::NBA.get_homepage_games()
 	    
 	    date = Time.parse(eastern_time().strftime('%Y%m%d')) - 86400
         show_games(m, games, date, "Yesterday's games: ")

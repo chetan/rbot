@@ -3,7 +3,7 @@
 #
 # display nhl scores
 
-require 'ysports'
+require 'yahoo_sports'
 require '0lib_rbot'
 
 class NhlPlugin < Plugin
@@ -16,25 +16,23 @@ class NhlPlugin < Plugin
   
   	# get latest results for a specific team
 	def nhl_team(m, params)
-	
-        m.reply "needs rewrite"
-    
-#		m.reply sprintf("%s (%s): %s %s - %s", name, rank, matches[1].strip, matches[3].strip, matches[6].strip)
 
-# 			if not name.include? teams[0][0] then
-# 			    live_game['away'] = 0
-# 			    live_game['team'] = 
-# 				vs = 'vs ' + teams[0][0]
-# 			else
-# 				vs = 'at ' + teams[1][0]
-# 			end
-# 			m.reply sprintf("%s (%s): %s %s %s - %s (live)", name, rank, Time.now.strftime("%b %d, %Y"), vs, scores[0], scores[1])
+        info = YahooSports::NHL.get_team_stats(params[:team])
+        last_game = info.last5[-1]
+        
+        game_date = last_game.date.strftime('%a %b %d')
+        
+        ret = sprintf("%s (%s, %s): %s, %s%s - %s", 
+                      info.name, info.standing, info.position, 
+                      game_date, (last_game.away ? "at " : ""), last_game.team, last_game.status)
+        
+        return m.reply(ret)
 		
 	end
 	
 	def nhl_live(m, params)
 	
-	    games = YSports::NHL.get_homepage_games('live')
+	    games = YahooSports::NHL.get_homepage_games('live')
 	
 	    date = Time.parse(eastern_time().strftime('%Y%m%d'))
         show_games(m, games, date, "Live games: ")
@@ -43,7 +41,7 @@ class NhlPlugin < Plugin
 	
 	def nhl_today(m, params)
 	
-	    games = YSports::NHL.get_homepage_games()
+	    games = YahooSports::NHL.get_homepage_games()
 	    
 	    date = Time.parse(eastern_time().strftime('%Y%m%d'))
         show_games(m, games, date, "Today's games: ")
@@ -52,7 +50,7 @@ class NhlPlugin < Plugin
 	
 	def nhl_yesterday(m, params)
 	
-	    games = YSports::NHL.get_homepage_games()
+	    games = YahooSports::NHL.get_homepage_games()
 	    
 	    date = Time.parse(eastern_time().strftime('%Y%m%d')) - 86400
         show_games(m, games, date, "Yesterday's games: ")

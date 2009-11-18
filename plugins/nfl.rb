@@ -24,25 +24,18 @@ class NflPlugin < Plugin
   	# get latest results for a specific team
 	def nfl_team(m, params)
 
-        params[:teams].each { |t|
-
-		team = YSports::NFL.get_team_stats( t )
-		
-		m.reply sprintf("couldn't find team `%s'", params[:team]) if not team
-		
-		last_s = sprintf("%s - %s", team.last.team, team.last.status)
-		last_s = "at " + last_s if team.last.away
-		
-		str = sprintf("%s (%s): %s", team.name, team.standing, last_s)
-		
-		if team.next then
-            next_s = sprintf("%s - %s %s", team.next.team, team.next.date.strftime('%a %b %e, %Y'), team.next.status)
-            next_s = "at " + next_s if team.next.away
-            str = sprintf("%s // next game: %s", str, next_s)
-        end
-		
-		m.reply str
-
+        params[:teams].each { |team|
+        
+            info = YahooSports::NFL.get_team_stats(team)
+            last_game = info.last5[-1]
+            
+            game_date = last_game.date.strftime('%a %b %d')
+            
+            ret = sprintf("%s (%s, %s): %s, %s%s - %s", 
+                          info.name, info.standing, info.position, 
+                          game_date, (last_game.away ? "at " : ""), last_game.team, last_game.status)
+            
+            m.reply(ret)
         }
 		
 	end
@@ -102,7 +95,7 @@ class NflPlugin < Plugin
   
 	def nfl_live(m, params)
 	
-	    games = YSports::NFL.get_homepage_games('live')
+	    games = YahooSports::NFL.get_homepage_games('live')
 	
 	    date = Time.parse(eastern_time().strftime('%Y%m%d'))
         show_games(m, games, date, "Live game(s): ", params[:team])
@@ -111,7 +104,7 @@ class NflPlugin < Plugin
 	
 	def nfl_today(m, params)
 	
-	    games = YSports::NFL.get_homepage_games()
+	    games = YahooSports::NFL.get_homepage_games()
 	    
 	    date = Time.parse(eastern_time().strftime('%Y%m%d'))
         show_games(m, games, date, "Today's game(s): ")
@@ -120,7 +113,7 @@ class NflPlugin < Plugin
 	
 	def nfl_yesterday(m, params)
 	
-	    games = YSports::NFL.get_homepage_games()
+	    games = YahooSports::NFL.get_homepage_games()
 	    
 	    date = Time.parse(eastern_time().strftime('%Y%m%d')) - 86400
         show_games(m, games, date, "Yesterday's game(s): ")

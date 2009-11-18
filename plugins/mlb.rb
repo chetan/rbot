@@ -24,37 +24,16 @@ class MlbPlugin < Plugin
   	# get latest results for a specific team
 	def mlb_team(m, params)
 
-        params[:teams].each { |t|
-
-            team = YSports::MLB.get_team_stats(t)
-            
-            if team.live.nil? then
-                last = team.last5[-1]
-                last_s = sprintf("%s - %s", last.team, last.status)
-                last_s = "at " + last_s if last.away
-            else
-                # there is a live game
-                game = team.live
-                live_team = (game.home ? 
-                             'vs ' + game.away_team.name : 
-                             'at ' + game.home_team.name)
-
-                if game.inning !~ /Final/ then
-                    status = sprintf("[LIVE, %s] ", game.inning)
-                else
-                    status = ''
-                end
-                
-                last_s = sprintf("%s%s %s - %s", 
-                                 status,
-                                 live_team, 
-                                 game.away_team.runs, 
-                                 game.home_team.runs)
-            end
-            
-            m.reply sprintf("%s (%s): %s", team.name, team.standing, last_s)
-
-        }
+        info = YahooSports::MLB.get_team_stats(params[:team])
+        last_game = info.last5[-1]
+        
+        game_date = last_game.date.strftime('%a %b %d')
+        
+        ret = sprintf("%s (%s, %s): %s, %s%s - %s", 
+                      info.name, info.standing, info.position, 
+                      game_date, (last_game.away ? "at " : ""), last_game.team, last_game.status)
+        
+        return m.reply(ret)
 		
 	end
 	
@@ -113,7 +92,7 @@ class MlbPlugin < Plugin
   
 	def mlb_live(m, params)
 	
-	    games = YSports::MLB.get_homepage_games('live')
+	    games = YahooSports::MLB.get_homepage_games('live')
 	
 	    date = Time.parse(eastern_time().strftime('%Y%m%d'))
         show_games(m, games, date, "Live game(s): ", params[:team])
@@ -122,7 +101,7 @@ class MlbPlugin < Plugin
 	
 	def mlb_today(m, params)
 	
-	    games = YSports::MLB.get_homepage_games()
+	    games = YahooSports::MLB.get_homepage_games()
 	    
 	    date = Time.parse(eastern_time().strftime('%Y%m%d'))
         show_games(m, games, date, "Today's game(s): ")
@@ -131,7 +110,7 @@ class MlbPlugin < Plugin
 	
 	def mlb_yesterday(m, params)
 	
-	    games = YSports::MLB.get_homepage_games()
+	    games = YahooSports::MLB.get_homepage_games()
 	    
 	    date = Time.parse(eastern_time().strftime('%Y%m%d')) - 86400
         show_games(m, games, date, "Yesterday's game(s): ")
