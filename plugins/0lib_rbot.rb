@@ -10,6 +10,8 @@ $: << _lib if not $:.include? _lib
 module PluginLib
 
     OUR_UNSAFE = Regexp.new("[^#{URI::PATTERN::UNRESERVED}#{URI::PATTERN::RESERVED}%# ]", false, 'N')
+
+    if Module.constants.include?('Irc') then
     
     Irc::Bot::Config.register Irc::Bot::Config::StringValue.new('pixelcop.db.host',
                                                                 :default => 'localhost',
@@ -26,6 +28,8 @@ module PluginLib
     Irc::Bot::Config.register Irc::Bot::Config::StringValue.new('pixelcop.db.pass',
                                                                 :default => 'rbot',
                                                                 :desc => "MySQL DB password")
+
+    end
     
     def extract_urls(m)
     
