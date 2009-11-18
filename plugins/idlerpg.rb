@@ -22,7 +22,7 @@ class IdleRpgPlugin < Plugin
         params[:user] = m.sourcenick.downcase if params[:user].empty?
     
         params[:user].each { |user|
-            url = sprintf("http://rpg.znx.no/xml.php?player=%s",user)
+            url = sprintf("http://rpg.killme.org/xml.php?player=%s",user)
             xml = open(url)
         
             unless xml
@@ -75,7 +75,7 @@ class IdleRpgPlugin < Plugin
     
     def get_rank(player)
     
-        html = fetchurl('http://rpg.znx.no/players.php')
+        html = fetchurl('http://rpg.killme.org/players.php')
         if not html then
             return -1
         end
