@@ -11,6 +11,7 @@ My Plugins for rbot - a Ruby IRC bot :: http://www.ruby-rbot.org/
 * nfl.rb - NFL stats and scores
 * nhl.rb - NHL stats and scores
 * oil.rb - Gets crude oil price from bloomberg.com
+* quietube.rb - Posts shortened quietube version of youtube links with optional title
 * rotten.rb - Lookup movies on rottentomatoes.com
 * scrambler.rb - A game where users compete to unscramble words as fast as possible
 * stocks.rb - Lookup stock prices on Yahoo! finance

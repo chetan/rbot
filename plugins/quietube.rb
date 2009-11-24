@@ -1,7 +1,7 @@
 # quietube
 # by chetan sarva <cs@pixelcop.net> 2009-11-24
 #
-# posts shortened quietube version of youtube links with title
+# posts shortened quietube version of youtube links with optional title
 
 require '0lib_rbot'
 require 'shorturl'
