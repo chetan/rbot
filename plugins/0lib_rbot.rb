@@ -1,5 +1,7 @@
 
 require 'htmlentities'
+require 'net/http'
+require 'uri/common'
 
 _lib = File.expand_path( File.dirname(__FILE__) )
 $: << _lib if not $:.include? _lib
