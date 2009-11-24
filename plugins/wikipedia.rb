@@ -16,6 +16,14 @@ class WikiPediaPlugin < Plugin
 
 	include PluginLib
 	
+    Config.register Config::ArrayValue.new("wikipedia.ignore_channels",
+      :desc => "Don't show info on these channels",
+      :default => [])
+      
+    Config.register Config::ArrayValue.new("wikipedia.ignore",
+      :desc => "Don't show info for urls from users represented as hostmasks on this list. Useful for ignoring other bots, for example.",
+      :default => [])
+	
 	def help(plugin, topic="")
 		return "wikipedia|wp <term>"
 	end
@@ -59,6 +67,9 @@ class WikiPediaPlugin < Plugin
   def listen(m)
     
     return unless m.kind_of?(PrivMessage)
+    
+    @bot.config["wikipedia.ignore_channels"].each { |c| return if c.downcase }.include?(m.channel.downcase)
+    @bot.config["wikipedia.ignore"].each { |u| return if m.source.matches?(u) }
 
     if m.message =~ %r|http://en.wikipedia.org/wiki/([^ ]+)|
 		# found a wikipedia link
