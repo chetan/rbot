@@ -25,7 +25,7 @@ class StocksPlugin < Plugin
         # oil: http://finance.yahoo.com/q/fc?s=CLF09.NYM
         # corn: http://finance.yahoo.com/q/fc?s=CZ08.CBT
 
-        @misc = { 'gold' => 'GCX09.CMX', # nov
+        @misc = { 'gold' => 'GCZ09.CMX', # dec
                   'oil'  => 'CLZ09.NYM', # dec
                   'corn' => 'CZ09.CBT' } # dec
 	end
