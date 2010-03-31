@@ -174,7 +174,7 @@ class RottenPlugin < Plugin
 									 :rating => info.rating.to_i,
 									 :rating_top => info.rating_top.to_i,
 									 :link => link })
-		
+
 		if info.ratings.match(/Reviews Counted: ?(\d+)/) then
             movie_info.total = $1.to_i
         end
@@ -194,6 +194,10 @@ class RottenPlugin < Plugin
 		movie_info.runtime     = info.info[1]
 		movie_info.relase_date = info.info[3]
 		movie_info.box_office  = info.info[5]
+
+        # double check the rating
+        r = (movie_info.fresh.to_f / movie_info.total * 100).round
+        movie_info.rating = r if r != movie_info.rating 
 		
 		movie_info.status = movie_info.rating >= 60 ? 'Fresh' : 'Rotten'
 		
@@ -206,7 +210,6 @@ class RottenPlugin < Plugin
 	# print opening movies and their scores
 	def opening(m, params, url, num = 5)
 
-        warning num
         num -= 1
 	    num = 0 if num < 0
 
