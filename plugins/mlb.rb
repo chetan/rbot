@@ -172,7 +172,7 @@ plugin.map 'mlb yest', :action => 'mlb_yesterday'
 plugin.map 'mlb yesterday', :action => 'mlb_yesterday'
 plugin.map 'mlb', :action => 'mlb_yesterday'
 
-plugin.map 'mlb *teams', :action => 'mlb_team'
+plugin.map 'mlb :team', :action => 'mlb_team'
 
 plugin.map 'mymlb', :action => 'mymlb'
 plugin.map 'mymlb *teams', :action => 'set_default'
