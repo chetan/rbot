@@ -136,6 +136,22 @@ module PluginLib
 	# 		gsub(/&apos;/, "'").
 	#		gsub(/\r\n/, ' | ').
 	
+    def strip_html_entities(str)
+        str.gsub!(/&nbsp;/, ' ')
+        str.gsub!(/&[#0-9a-z]+;/, '')
+        str
+    end
+
+
+    def cleanup_html(str, strip_entities = false)
+        str.gsub!(/&nbsp;/, '')
+        str = strip_html_entities(str) if strip_entities
+        str = strip_tags(str)
+        str.strip!
+        str.squeeze!(" \n\r")
+        return str
+    end
+	
 	def limit_output(str)
 		str.strip[0, 1130]
 	end

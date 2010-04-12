@@ -21,23 +21,10 @@ class TinyWeatherPlugin < Plugin
 
 	def do_tiny_weather(m, params)
 		
-		if params[:zip] then
-            zip = params[:zip]
-            
-            # store it if we have nothing on file for them
-            if not @registry.has_key? m.sourceaddress then
-                @registry[m.sourceaddress] = params[:zip]
-                m.reply("hi %s. I went ahead and set %s as your default zip. You can change it with the command tw default <zip>" % [ m.sourcenick, params[:zip] ])
-            end
-            
-        elsif @registry.has_key? m.sourceaddress then
-            zip = @registry[m.sourceaddress]
-        else
-            return m.reply("zipcode is required the first time you call me")
-		end
+        zip = check_zip(m, params)
+		return if zip.nil?
 		
 		w = scrape_hourly_weather(zip)
-		
 		return m.reply("error getting weather") if not w
 
         s = [w.location]
@@ -61,6 +48,51 @@ class TinyWeatherPlugin < Plugin
 		m.reply(s.join('   '))
 		
 	end
+	
+	def do_tiny_weather_forecast(m, params)
+	    
+	    zip = check_zip(m, params)
+		return if zip.nil?
+		
+		do_tiny_weather(m, params) # do this first
+		
+		w = scrape_weather_forecast(zip)
+		return m.reply("error getting weather") if not w
+		
+		s = [w.location]
+		w.days.each_with_index { |d, i| 
+		    next if i == 0
+		    day = d.date.split[0]
+		    high = d.temps.split("\n")[0] + "F"
+		    s << sprintf("%s: %s (%s)", day, high, d.precip)
+		    break if i > 5
+	    }
+		
+	    m.reply(s.join('   '))
+    end
+    
+    def check_zip(m, params)
+        
+       	if params[:zip] then
+            zip = params[:zip]
+            
+            # store it if we have nothing on file for them
+            if not @registry.has_key? m.sourceaddress then
+                @registry[m.sourceaddress] = params[:zip]
+                m.reply("hi %s. I went ahead and set %s as your default zip. You can change it with the command tw default <zip>" % [ m.sourcenick, params[:zip] ])
+            end
+            
+            return zip
+            
+        elsif @registry.has_key? m.sourceaddress then
+            return @registry[m.sourceaddress]
+            
+        else
+            m.reply("zipcode is required the first time you call me")
+            return nil
+		end
+		 
+    end
 	
 	def do_set_default(m, params)
 	
@@ -102,10 +134,43 @@ class TinyWeatherPlugin < Plugin
        
 	end
 	
+	def scrape_weather_forecast(zip)
+	    
+	    html = fetchurl('http://www.weather.com/outlook/travel/businesstraveler/tenday/' + zip)
+	    
+	    day_scraper = Scraper.define do
+	        process "div.tdDate", :date => :text
+	        process "div.tdTemps", :temps => :text
+	        process "div.tdPrecip", :precip => :text
+	        result :date, :temps, :precip
+        end
+	    
+	    fc_scraper = Scraper.define do
+	        array :days
+	        process "div.tdWrap", :days => day_scraper
+	        process_first "td.module h2.moduleTitleBarGML", :location => :text
+	        result :location, :days
+        end
+        
+        w = fc_scraper.scrape(html)
+        
+        # cleanup results
+        w.location = w.location.split("\n")[1]
+        w.days.each { |d|
+            d.date = cleanup_html(d.date).gsub(/\n/, ' ')
+            d.temps = cleanup_html(d.temps, true)
+            d.precip = cleanup_html(d.precip)
+        }
+	    
+	    return w
+	    
+    end
+	
 end
 
 plugin = TinyWeatherPlugin.new
 plugin.map 'tw default :zip', :action => 'do_set_default'
 plugin.map 'tw [:zip]', :action => 'do_tiny_weather'
+plugin.map 'twf [:zip]', :action => 'do_tiny_weather_forecast'
 
 
