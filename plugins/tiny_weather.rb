@@ -65,7 +65,7 @@ class TinyWeatherPlugin < Plugin
 		    day = d.date.split[0]
 		    high = d.temps.split("\n")[0] + "F"
 		    s << sprintf("%s: %s (%s)", day, high, d.precip)
-		    break if i > 5
+		    break if i == 6 # only want to show the next 6 days
 	    }
 		
 	    m.reply(s.join('   '))
