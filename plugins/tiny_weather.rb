@@ -13,7 +13,6 @@ class TinyWeatherPlugin < Plugin
 
 	def initialize
 		super
-		@url = 'http://www.weather.com/outlook/travel/businesstraveler/hourbyhour/graph/'
 	end
 	
 	def help(plugin, topic="")
@@ -23,23 +22,23 @@ class TinyWeatherPlugin < Plugin
 	def do_tiny_weather(m, params)
 		
 		if params[:zip] then
-            url = @url + params[:zip]
+            zip = params[:zip]
             
             # store it if we have nothing on file for them
             if not @registry.has_key? m.sourceaddress then
                 @registry[m.sourceaddress] = params[:zip]
-                m.reply "hi %s. I went ahead and set %s as your default zip. You can change it with the command tw default <zip>" % [ m.sourcenick, params[:zip] ]
+                m.reply("hi %s. I went ahead and set %s as your default zip. You can change it with the command tw default <zip>" % [ m.sourcenick, params[:zip] ])
             end
             
         elsif @registry.has_key? m.sourceaddress then
-            url = @url + @registry[m.sourceaddress]
+            zip = @registry[m.sourceaddress]
         else
-            return m.reply "zipcode is required the first time you call me"
+            return m.reply("zipcode is required the first time you call me")
 		end
 		
-		w = scrape_weather(url)
+		w = scrape_hourly_weather(zip)
 		
-		return m.reply "error getting weather" if not w
+		return m.reply("error getting weather") if not w
 
         s = [w.location]
         i = 0
@@ -59,14 +58,14 @@ class TinyWeatherPlugin < Plugin
             s << "grab an umbrella!"
         end
 				
-		m.reply s.join('   ')
+		m.reply(s.join('   '))
 		
 	end
 	
 	def do_set_default(m, params)
 	
 	    if not params[:zip] then
-	        return m.reply "%s, I can't very well set a new default for you without a zipcode, can I?" % m.sourcenick
+	        return m.reply("%s, I can't very well set a new default for you without a zipcode, can I?" % m.sourcenick)
 	    end
 
 	    @registry[m.sourceaddress] = params[:zip]
@@ -77,9 +76,9 @@ class TinyWeatherPlugin < Plugin
 	    
 	end
 	
-	def scrape_weather(url)
+	def scrape_hourly_weather(zip)
 	    
-	    html = fetchurl(url)
+	    html = fetchurl('http://www.weather.com/outlook/travel/businesstraveler/hourbyhour/graph/' + zip)
 	    
 	    hour_scraper = Scraper.define do
             process "div.hbhWxTime div", :hour => :text
