@@ -66,7 +66,7 @@ class IdleRpgPlugin < Plugin
             
                 #m.reply sprintf("%s: Rank: %s Level: %s Class: %s Alignment: %s  Online: %s Item Score: %s Next level in %s", user, rank, level, pclass, align, online, psum, lvltime)
                 
-                m.reply sprintf("%s: (rank: %s, level: %s) is %s next level in %s", user, rank, level, online_s, lvltime)
+                m.reply sprintf("%s: the %s (rank: %s, level: %s) is %s next level in %s", user, pclass, rank, level, online_s, lvltime)
             
             end
         }
