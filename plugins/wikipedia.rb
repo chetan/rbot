@@ -66,10 +66,10 @@ class WikiPediaPlugin < Plugin
 	
   def listen(m)
     
-    return unless m.kind_of?(PrivMessage)
+    return if m.nil? or not m.kind_of?(PrivMessage) or m.channel.nil?
     
-    @bot.config["wikipedia.ignore_channels"].each { |c| return if c.downcase }.include?(m.channel.downcase)
-    @bot.config["wikipedia.ignore"].each { |u| return if m.source.matches?(u) }
+    return if @bot.config["wikipedia.ignore_channels"].map { |c| c.nil? ? c : c.downcase }.include? m.channel.downcase
+    return if @bot.config["wikipedia.ignore"].find { |u| m.source.matches?(u) }
 
     if m.message =~ %r|http://en.wikipedia.org/wiki/([^ ]+)|
 		# found a wikipedia link
