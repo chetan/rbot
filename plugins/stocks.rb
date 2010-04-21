@@ -60,7 +60,6 @@ class StocksPlugin < Plugin
 		end
 		
 		s = params[:symbols].join(" ")
-		return m.reply "no symbol(s) entered" if not s
 		
         if s =~ /^['"].*['"]$/ then
             # surrounded in quotes, do a symbol lookup using google
@@ -68,7 +67,7 @@ class StocksPlugin < Plugin
             begin
                 symbols = symbol_lookup(s)
             rescue
-                return m.reply $!
+                return m.reply($!)
             end
             
 		else
@@ -76,7 +75,7 @@ class StocksPlugin < Plugin
 		    symbols = params[:symbols].join(",")
 		    
 		end
-
+        
         _lookup(m, symbols)
 		
 	end
@@ -90,7 +89,7 @@ class StocksPlugin < Plugin
                 return m.reply( sprintf("no data found for '%s'", symbol) )
             rescue
                 debug "dying.... %!"
-                return m.reply $!
+                return m.reply($!)
             end
         end
         
@@ -133,12 +132,12 @@ class StocksPlugin < Plugin
         if not json_response then
             raise sprintf('Lookup failed for "%s"', str)
         end
+        
         sugg = JSON.parse(json_response)
         if sugg['matches'].nil? or sugg['matches'].empty? then
             raise sprintf('No symbols found for "%s"', str)
         end
-        return sugg['matches'][0]['sugg'][0]
-	
+        matches = sugg['matches'].first['t']
 	end
 		
 end 
