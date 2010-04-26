@@ -67,7 +67,7 @@ class RottenPlugin < Plugin
 		# couldn't find anything
 		return m.reply(sprintf("`%s' not found", movie)) if info.nil?
 		
-		if info.fresh == 0 and info.total == 0 and info.release_date > Time.new then
+		if info.fresh == 0 and info.total == 0 and info.release_date and info.release_date > Time.new then
 			# zero ratings and is in the future
 			return m.reply(sprintf("%s - %s (no reviews) %s", info.title, info.release_date.strftime("%b %d, %Y"), info.link))
 		end
@@ -180,29 +180,35 @@ class RottenPlugin < Plugin
 									 :rating_top => info.rating_top.to_i,
 									 :link => link })
 
-		if info.ratings.match(/Reviews Counted: ?(\d+)/) then
-            movie_info.total = $1.to_i
-        end
-        
-		if info.ratings.match(/Fresh: ?(\d+)/) then
-            movie_info.fresh = $1.to_i
-		end
+        if info.ratings then
+		    if info.ratings.match(/Reviews Counted: ?(\d+)/) then
+                movie_info.total = $1.to_i
+            end
+            
+		    if info.ratings.match(/Fresh: ?(\d+)/) then
+                movie_info.fresh = $1.to_i
+		    end
 
-		if info.ratings.match(/Rotten: ?(\d+)/) then
-            movie_info.rotten = $1.to_i
-        end
-		
-		if info.ratings.match(/Average Rating: ?(.*)/) then
-            movie_info.average = $1
+		    if info.ratings.match(/Rotten: ?(\d+)/) then
+                movie_info.rotten = $1.to_i
+            end
+		    
+		    if info.ratings.match(/Average Rating: ?(.*)/) then
+                movie_info.average = $1
+            end
+        else
+            movie_info.total = movie_info.fresh = movie_info.rotten = movie_info.average = 0
         end
         
 		# pull out stats
-		movie_stats = info.info.to_perly_hash
-		movie_info.runtime      = movie_stats['Runtime:']
-		movie_info.release_date = movie_stats['Theatrical Release:']
-		movie_info.box_office   = movie_stats['Box Office:']
-		movie_info.rated        = movie_stats['Rated:']
-		movie_info.genre		= movie_stats['Genre:']
+        if info.info then
+		    movie_stats = info.info.to_perly_hash
+		    movie_info.runtime      = movie_stats['Runtime:']
+		    movie_info.release_date = movie_stats['Theatrical Release:']
+		    movie_info.box_office   = movie_stats['Box Office:']
+		    movie_info.rated        = movie_stats['Rated:']
+		    movie_info.genre		= movie_stats['Genre:']
+        end
 		
 		# cleanup release date
 		if movie_info.release_date then
