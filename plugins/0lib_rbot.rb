@@ -9,6 +9,19 @@ $: << _lib if not $:.include? _lib
 _lib = File.expand_path( File.dirname(__FILE__) + '/lib' )
 $: << _lib if not $:.include? _lib
 
+class Array
+
+    def to_perly_hash()
+        h = {}
+        self.each_index { |i| 
+            next if i % 2 != 0
+            h[ self[i] ] = self[i+1]
+        }
+        return h
+    end
+
+end
+
 module PluginLib
 
     OUR_UNSAFE = Regexp.new("[^#{URI::PATTERN::UNRESERVED}#{URI::PATTERN::RESERVED}%# ]", false, 'N')
