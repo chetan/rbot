@@ -9,7 +9,7 @@ require 'uri/common'
 require '0lib_rbot'
 require 'scrapi'
 require 'ostruct'
-
+require 'time'
 
 Struct.new("Movie", :title, :link, :percent, :rating, :desc, :count, :fresh, :rotten, :release)
 
@@ -65,9 +65,14 @@ class RottenPlugin < Plugin
 		info = search_site(m, movie, show_url) if info.nil?
 		
 		# couldn't find anything
-		return m.reply sprintf("`%s' not found", movie) if info.nil?
-
-        m.reply sprintf("%s - %s%% = %s (%s/%s) %s", info.title, info.rating, info.status, info.fresh, info.total, info.link)
+		return m.reply(sprintf("`%s' not found", movie)) if info.nil?
+		
+		if info.fresh == 0 and info.total == 0 and info.release_date > Time.new then
+			# zero ratings and is in the future
+			return m.reply(sprintf("%s - %s (no reviews) %s", info.title, info.release_date.strftime("%b %d, %Y"), info.link))
+		end
+		
+        m.reply(sprintf("%s - %s%% = %s (%s/%s) %s", info.title, info.rating, info.status, info.fresh, info.total, info.link))
 
 	end
 	
@@ -191,15 +196,36 @@ class RottenPlugin < Plugin
             movie_info.average = $1
         end
         
-		movie_info.runtime     = info.info[1]
-		movie_info.relase_date = info.info[3]
-		movie_info.box_office  = info.info[5]
+		# pull out stats
+		movie_stats = info.info.to_perly_hash
+		movie_info.runtime      = movie_stats['Runtime:']
+		movie_info.release_date = movie_stats['Theatrical Release:']
+		movie_info.box_office   = movie_stats['Box Office:']
+		movie_info.rated        = movie_stats['Rated:']
+		movie_info.genre		= movie_stats['Genre:']
+		
+		# cleanup release date
+		if movie_info.release_date then
+			begin
+				rd = movie_info.release_date.split(' ')[0..2].join(' ')
+				movie_info.release_date = Time.parse(rd)
+			rescue => ex
+				puts ex
+			end
+		end
+			
 
         # double check the rating
-        r = (movie_info.fresh.to_f / movie_info.total * 100).round
+        begin
+            r = (movie_info.fresh.to_f / movie_info.total * 100).round
+        rescue => ex
+            r = 0
+        end
         movie_info.rating = r if r != movie_info.rating 
-		
+
 		movie_info.status = movie_info.rating >= 60 ? 'Fresh' : 'Rotten'
+		
+		p movie_info
 		
 		return movie_info
 	
@@ -223,9 +249,9 @@ class RottenPlugin < Plugin
 		    doc = Document.new xml
         rescue => ex
             if xml.include? '<html>' then
-			    return m.reply "rottentomatoes rss feeds are currently down"
+			    return m.reply("rottentomatoes rss feeds are currently down")
             else
-                return m.reply "error parsing feed: " + ex
+                return m.reply("error parsing feed: " + ex)
             end
 		end
 		
