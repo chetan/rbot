@@ -25,9 +25,9 @@ class StocksPlugin < Plugin
         # oil: http://finance.yahoo.com/q/fc?s=CLF09.NYM
         # corn: http://finance.yahoo.com/q/fc?s=CZ08.CBT
 
-        @misc = { 'gold' => 'GCZ09.CMX', # dec
-                  'oil'  => 'CLZ09.NYM', # dec
-                  'corn' => 'CZ09.CBT' } # dec
+        @misc = { 'gold' => 'GCK10.CMX', # may
+                  'oil'  => 'CLM10.NYM', # may
+                  'corn' => 'CK10.CBT' } # may
 	end
 	
 	def help(plugin, topic="")
