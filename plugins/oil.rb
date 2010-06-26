@@ -30,11 +30,11 @@ class OilPlugin < Plugin
         bloomberg_energy = Scraper.define do
         
             array :prices
-            process "span.tbl_num", :prices => :text
+            process "div#stock_data > table td.price", :prices => :text
             result :prices
         end
         
-        uri = URI.parse(URI.escape('http://www.bloomberg.com/markets/commodities/energyprices.html'))
+        uri = URI.parse(URI.escape('http://www.bloomberg.com/markets/commodities/energy-prices/'))
         
         http = Net::HTTP.new(uri.host, uri.port)
         html = http.start do |http|
