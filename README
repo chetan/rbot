@@ -1,4 +1,5 @@
 Chetan Sarva :: http://github.com/chetan 
+Brian Ploch	 :: http://github.com/ploch
 
 My Plugins for rbot - a Ruby IRC bot :: http://www.ruby-rbot.org/
 
@@ -14,6 +15,7 @@ My Plugins for rbot - a Ruby IRC bot :: http://www.ruby-rbot.org/
 * quietube.rb - Posts shortened quietube version of youtube links with optional title
 * rotten.rb - Lookup movies on rottentomatoes.com
 * scrambler.rb - A game where users compete to unscramble words as fast as possible
+* steam.rb - Lookup steam users profile information by profile (customurl) or steamID64
 * stocks.rb - Lookup stock prices on Yahoo! finance
 * tiny_weather.rb - A minimalist weather script
 * wikipedia.rb - Lookup articles on wikipedia and get a summary
