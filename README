@@ -5,8 +5,9 @@ My Plugins for rbot - a Ruby IRC bot :: http://www.ruby-rbot.org/
 
 * bo.rb (boxoffice) - Movie box office information
 * debt.rb - Looks up the US national debt
+* dvd_release.rb - Lookup recent or upcoming dvd releases
 * fmylife.rb - Get posts from fmylife.com
-* idlerpg.rb - Get status for user in efnet's #idlerpg game
+* idlerpg.rb - Get status for user in efnet's #failrpg game
 * mlb.rb - MLB stats and scores
 * nba.rb - NBA stats and scores
 * nfl.rb - NFL stats and scores
