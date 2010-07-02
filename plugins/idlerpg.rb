@@ -89,7 +89,7 @@ class IdleRpgPlugin < Plugin
         players = irpg_player.scrape(html)
         
         players.each_with_index {|item, index|
-            return index + 1 if item == player
+            return index + 1 if item == player or item.downcase == player.downcase
         }
     
     end
