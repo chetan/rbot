@@ -28,7 +28,6 @@ class WootPlugin < Plugin
 	def woot(m,params)
 		
         woot = get_woot()
-				p woot
         m.reply "unable to get current woots" if not woot[0].price
         m.reply sprintf("Woot! %s - $%s", woot[0].descrip, woot[0].price)
         m.reply sprintf("Sellout! %s - $%s", woot[1].descrip, woot[1].price)
