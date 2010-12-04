@@ -20,4 +20,4 @@ My Plugins for rbot - a Ruby IRC bot :: http://www.ruby-rbot.org/
 * stocks.rb - Lookup stock prices on Yahoo! finance
 * tiny_weather.rb - A minimalist weather script
 * wikipedia.rb - Lookup articles on wikipedia and get a summary
-
+* woot.rb - Lookup daily deal from woot.com and sellout.woot (or random from deals if sold out)
