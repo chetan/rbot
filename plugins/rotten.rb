@@ -165,9 +165,9 @@ class RottenPlugin < Plugin
 			
 			array :info
 			
-			process "div#tomatometer_data", :ratings => :text
-			process "div#tomatometer_score > span.percent", :rating => :text
-			process "div#bubble_topCritics", :rating_top => :text
+			process "div#all-critics-numbers p.critic_stats", :ratings => :text
+			process "div#all-critics-numbers span#all-critics-meter", :rating => :text
+			process "div#top-critics-numbers span#all-critics-meter", :rating_top => :text
 			process "div#movie_stats span", :info => :text
 			
 			result :ratings, :rating, :rating_top, :info
@@ -231,10 +231,7 @@ class RottenPlugin < Plugin
 
 		movie_info.status = movie_info.rating >= 60 ? 'Fresh' : 'Rotten'
 		
-		p movie_info
-		
 		return movie_info
-	
 	end
 	
 
