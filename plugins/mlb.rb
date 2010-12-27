@@ -127,30 +127,30 @@ class MlbPlugin < Plugin
 	    			(game.team1.downcase.include? team or 
 	    			 game.team2.downcase.include? team)
 	    
-	        if game.date == date then
-	            if game.state == 'preview' then
-                    game.status = sprintf("%s, %s", game.status, game.extra) if game.extra
-	                scores << sprintf("%s at %s (%s, %s)", game.team1, game.team2, game.state, game.status)
-	            else
-	                if game.state == 'final' then
-	                    if game.score1.to_i > game.score2.to_i then
-                            game.team1 += '*'
-                        else
-                            game.team2 += '*'
-                        end
-                        game.status = 'F'
-                    else
-                        # live
-                        game.status = sprintf('%s, %s', game.state, game.status)
-                    end
-	                scores << sprintf("%s %s at %s %s (%s)", 
-                                       game.team1, game.score1, 
-                                       game.team2, game.score2, 
-                                       game.status.strip)
-                                       
-	            end
-	        end
-	    
+            next if Time.parse(game.date.strftime('%Y%m%d')) != date
+
+	        if game.state == 'preview' then
+                game.status = sprintf("%s, %s", game.status, game.extra) if game.extra
+	            scores << sprintf("%s at %s (%s, %s)", game.team1, game.team2, game.state, game.status)
+                next
+            end
+
+	        if game.state == 'final' then
+	            if game.score1.to_i > game.score2.to_i then
+                    game.team1 += '*'
+                else
+                    game.team2 += '*'
+                end
+                game.status = 'F'
+            else
+                # live
+                game.status = sprintf('%s, %s', game.state, game.status)
+            end
+
+	        scores << sprintf("%s %s at %s %s (%s)", 
+                               game.team1, game.score1, 
+                               game.team2, game.score2, 
+                               game.status.strip)
 	    }
 	    
 	    return m.reply(text + 'none') if scores.empty?
