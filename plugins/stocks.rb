@@ -21,13 +21,14 @@ class StocksPlugin < Plugin
 		
 		
         # list at http://finance.yahoo.com/futures
+        # TODO: scrape these dynamically
         # gold: http://finance.yahoo.com/q/fc?s=GCX08.CMX
         # oil: http://finance.yahoo.com/q/fc?s=CLF09.NYM
         # corn: http://finance.yahoo.com/q/fc?s=CZ08.CBT
 
-        @misc = { 'gold' => 'GCK10.CMX', # may
-                  'oil'  => 'CLM10.NYM', # may
-                  'corn' => 'CK10.CBT' } # may
+        @misc = { 'gold' => 'GCF11.CMX',
+                  'oil'  => 'CLG11.NYM',
+                  'corn' => 'CH11.CBT' }
 	end
 	
 	def help(plugin, topic="")
