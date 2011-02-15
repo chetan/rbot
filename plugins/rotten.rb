@@ -95,7 +95,7 @@ class RottenPlugin < Plugin
 			title = percent = rating = link = desc = release = nil
 			doc.elements.each("rss/channel/item") {|e|			
 				
-				title = e.elements["title"].text
+				title = e.elements["title"].text.strip
 				link = e.elements["link"].text
 				
 				if not e.elements["RTmovie:tomatometer_percent"].text.nil?
@@ -263,7 +263,7 @@ class RottenPlugin < Plugin
 		matches = Array.new
 		doc.elements.each("rss/channel/item") {|e|			
 			
-			title = e.elements["title"].text
+			title = e.elements["title"].text.strip
 			
 			if not e.elements["RTmovie:tomatometer_percent"].text.nil?
 				# movie has a rating
@@ -276,7 +276,7 @@ class RottenPlugin < Plugin
 				rating = ""
 			end
 
-			matches << sprintf("%s - %s %s", title, percent, rating)
+			matches << sprintf("%s - %s %s", title, percent, rating).strip
 			
 		}
 		
