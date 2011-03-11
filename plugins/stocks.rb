@@ -1,5 +1,5 @@
 # stocks
-# by ploch
+# by brian ploch <brian -at- ploch.net>
 # by chetan sarva <cs@pixelcop.net> 2007-01-23
 #
 # stock lookup. 
@@ -19,16 +19,31 @@ class StocksPlugin < Plugin
 		super
 		@google_url = 'http://finance.google.com/finance/match?matchtype=matchall&q='
 		
+		# map of month => code for futures
+		@futures_code = { 1	=> "F",
+										2 => "G",
+										3 => "H",
+										4 => "J",
+										5 => "K",
+										6 => "M",
+										7 => "N",
+									  8 => "Q",
+										9 => "U",
+										10 => "V",
+										11 => "X",
+										12 => "Z"
+									}
 		
-        # list at http://finance.yahoo.com/futures
-        # TODO: scrape these dynamically
-        # gold: http://finance.yahoo.com/q/fc?s=GCX08.CMX
-        # oil: http://finance.yahoo.com/q/fc?s=CLF09.NYM
-        # corn: http://finance.yahoo.com/q/fc?s=CZ08.CBT
+		# 									Symbol Market
+		@stocks = { 'gold' => 'GC CMX',
+								'copper'=>'HG CMX',
+								'silver'=>'SI CMX',
+								'oil'	 => 'CL NYM',
+								'corn' => 'C CBT',
+								'oats' => 'O CBT',
+								'n gas'=> 'NG NYM',
+								'rbob' => 'RB NYM'} 
 
-        @misc = { 'gold' => 'GCF11.CMX',
-                  'oil'  => 'CLG11.NYM',
-                  'corn' => 'CH11.CBT' }
 	end
 	
 	def help(plugin, topic="")
@@ -44,12 +59,33 @@ class StocksPlugin < Plugin
     # http://finance.yahoo.com/futures?
     #
     def do_oil(m, params)
-        params[:symbols] = [ @misc['oil'] ]
+				oil_symbol = get_commodity_code "oil"
+        params[:symbols] = [ oil_symbol ]
         return do_lookup(m,params)
     end
+
+		def get_commodity_code(stock)
+      stock_data = @stocks[stock].split
+      date = Time.new
+      year = date.year.to_s[-2,2]
+			if stock_data[1] == "NYM" then # Nymex only trades futures 
+      	month=date.month + 1
+			else
+      	month=date.month 
+			end
+      future_code = @futures_code[month]
+      stock_symbol = "#{stock_data[0]}#{future_code}#{year}.#{stock_data[1]}"      
+		end
+	
     
     def do_stocks3(m, params)
-        params[:symbols] = [ @misc['gold'], @misc['oil'], @misc['corn'] ]
+				list = ""
+				@stocks.each do |x| 
+  				code = get_commodity_code x[0]
+  				list += code + " "
+				end
+				params[:symbols] = list.split
+				
         return do_lookup(m,params)
     end
     
