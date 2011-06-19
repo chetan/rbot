@@ -19,13 +19,18 @@ class TinyWeatherPlugin < Plugin
         return "tw [zip] => get hourly forecast from weather.com; tw default <zip> => set your default zipcode"
     end
 
+    # Massillon, OH (44647)   11 am: 63F (10%)   1 pm: 72F (10%)   3 pm: 76F (10%)   5 pm: 75F (10%)   no rain :)
     def do_tiny_weather(m, params)
 
         zip = check_zip(m, params)
         return if zip.nil?
 
-        w = scrape_hourly_weather(zip)
-        return m.reply("error getting weather") if not w
+        w = nil
+        begin
+            w = scrape_hourly_weather(zip)
+        rescue => ex
+        end
+        return m.reply("error getting hourly weather") if not w
 
         s = [w.location]
         i = 0
@@ -49,6 +54,8 @@ class TinyWeatherPlugin < Plugin
 
     end
 
+    # Massillon, OH (44647)   11 am: 63F (10%)   1 pm: 72F (10%)   3 pm: 76F (10%)   5 pm: 75F (10%)   no rain :)
+    # Massillon, OH (44647)   Sat: 86F (40%)   Sun: 80F (10%)   Mon: 79F (0%)   Tue: 80F (10%)   Wed: 83F (30%)   Thu: 81F (60%)
     def do_tiny_weather_forecast(m, params)
 
         zip = check_zip(m, params)
@@ -56,15 +63,22 @@ class TinyWeatherPlugin < Plugin
 
         do_tiny_weather(m, params) # do this first
 
-        w = scrape_weather_forecast(zip)
-        return m.reply("error getting weather") if not w
+        w = nil
+        begin
+            w = scrape_weather_forecast(zip)
+        rescue => ex
+        end
+        return m.reply("error getting weather forecast") if not w
 
-        s = [w.location]
-        w.days.each_with_index { |d, i|
+        s = [ w.location ]
+        date = Time.new
+        w.temps.each_with_index { |d, i|
             next if i == 0
-            day = d.date.split[0]
-            high = d.temps.split("\n")[0] + "F"
-            s << sprintf("%s: %s (%s)", day, high, d.precip)
+            date += 86400
+            day = date.strftime("%a")
+            high = w.temps[i] + "F"
+            precip = w.precips[i] + "%"
+            s << sprintf("%s: %s (%s)", day, high, precip) # Sun: 80F (10%)
             break if i == 6 # only want to show the next 6 days
         }
 
@@ -136,34 +150,29 @@ class TinyWeatherPlugin < Plugin
 
     def scrape_weather_forecast(zip)
 
-        html = fetchurl('http://www.weather.com/outlook/travel/businesstraveler/tenday/' + zip)
-
-        day_scraper = Scraper.define do
-            process "div.tdDate", :date => :text
-            process "div.tdTemps", :temps => :text
-            process "div.tdPrecip", :precip => :text
-            result :date, :temps, :precip
-        end
+        html = fetchurl('http://www.weather.com/weather/tenday/' + zip)
 
         fc_scraper = Scraper.define do
-            array :days
-            process "div.tdWrap", :days => day_scraper
-            process_first "td.module h2.moduleTitleBarGML", :location => :text
-            result :location, :days
+            array :temps, :precips
+            process "td.twc-forecast-temperature", :temps => :text
+            process "td.twc-line-precip", :precips => :text
+            process_first "h1#twc_loc_head", :location => :text
+            result :location, :temps, :precips
         end
 
         w = fc_scraper.scrape(html)
 
         # cleanup results
-        w.location = w.location.split("\n")[1]
-        w.days.each { |d|
-            d.date = cleanup_html(d.date).gsub(/\n/, ' ')
-            d.temps = cleanup_html(d.temps, true)
-            d.precip = cleanup_html(d.precip)
-        }
+        w.location.gsub!(/\s+Weather\s*$/, '')
+        w.location.strip!
+
+        w.temps = w.temps[0,10] # first 10 are high temps
+        w.temps.first.gsub!(/F High/, '')
+        w.temps.each { |t| t.gsub!('&#176;', '') }
+
+        w.precips = w.precips.map { |t| t =~ /(\d+)/; $1 }
 
         return w
-
     end
 
 end
