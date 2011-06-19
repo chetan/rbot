@@ -85,21 +85,33 @@ class TinyWeatherPlugin < Plugin
         m.reply(s.join('   '))
     end
 
+    def get_sourceaddress(m)
+        source = m.sourceaddress
+        (ident, host) = source.split(/@/)
+        quads = host.split(/\./)
+        if quads.size > 3 then
+            source = "#{ident}@*." + quads[quads.size-3,quads.size].join(".")
+        end
+        return source
+    end
+
     def check_zip(m, params)
+
+        source = get_sourceaddress(m)
 
         if params[:zip] then
             zip = params[:zip]
 
             # store it if we have nothing on file for them
-            if not @registry.has_key? m.sourceaddress then
-                @registry[m.sourceaddress] = params[:zip]
+            if not @registry.has_key? source then
+                @registry[source] = params[:zip]
                 m.reply("hi %s. I went ahead and set %s as your default zip. You can change it with the command tw default <zip>" % [ m.sourcenick, params[:zip] ])
             end
 
             return zip
 
-        elsif @registry.has_key? m.sourceaddress then
-            return @registry[m.sourceaddress]
+        elsif @registry.has_key? source then
+            return @registry[source]
 
         else
             m.reply("zipcode is required the first time you call me")
@@ -110,11 +122,13 @@ class TinyWeatherPlugin < Plugin
 
     def do_set_default(m, params)
 
+        source = get_sourceaddress(m)
+
         if not params[:zip] then
             return m.reply("%s, I can't very well set a new default for you without a zipcode, can I?" % m.sourcenick)
         end
 
-        @registry[m.sourceaddress] = params[:zip]
+        @registry[source] = params[:zip]
         m.reply "%s, your default zip has been set to %s" % [ m.sourcenick, params[:zip] ]
 
         # and give em the weather while we're at it
