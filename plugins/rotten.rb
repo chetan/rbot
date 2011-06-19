@@ -83,8 +83,8 @@ class RottenPlugin < Plugin
     end
 
     def search_xml(m, movie)
-        r = search_xml_feed("#{@rss}complete_movies.xml", m, movie)
-        r = search_xml_feed("#{@rss}opening.xml", m, movie) if not r
+        r = search_xml_feed("#{@rss}opening.xml", m, movie)
+        r = search_xml_feed("#{@rss}complete_movies.xml", m, movie) if not r
         return r
     end
 
