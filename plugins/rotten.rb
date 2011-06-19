@@ -136,19 +136,19 @@ class RottenPlugin < Plugin
 
         movie_scraper = Scraper.define do
 
-            process "td.title > p > a", :title => :text
-            process "td.title > p > a", :url => "@href"
+            process "li h3", :title => :text
+            process "li h3 a", :url => "@href"
+            process "li span.tMeterScore", :score => :text
 
-            result :title, :url
-
+            result :title, :url, :score
         end
 
         movies_scraper = Scraper.define do
 
             array :movies
-            process "table.proViewTbl td.title", :movies => movie_scraper
-            result :movies
+            process "ul#movie_results_ul li", :movies => movie_scraper
 
+            result :movies
         end
 
         movies = movies_scraper.scrape(html)
@@ -169,7 +169,7 @@ class RottenPlugin < Plugin
         html = fetchurl(link)
         if html.nil?
             debug "error fetching " + link
-            return
+            return nil
         end
 
         movie_scraper = Scraper.define do
@@ -186,6 +186,7 @@ class RottenPlugin < Plugin
         end
 
         info = movie_scraper.scrape(html)
+
         movie_info = OpenStruct.new({:title => title,
                                      :rating => info.rating.to_i,
                                      :rating_top => info.rating_top.to_i,
