@@ -271,9 +271,6 @@ class RottenPlugin < Plugin
     # print opening movies and their scores
     def opening(m, params, url, num = 5)
 
-        num -= 1
-        num = 0 if num < 0
-
         xml = fetchurl(url)
         unless xml
             m.reply "faild to fetch feed"
@@ -292,7 +289,7 @@ class RottenPlugin < Plugin
 
         begin
 
-        matches = Array.new
+        movies = []
         doc.elements.each("rss/channel/item") {|e|
 
             title = e.elements["title"].text.strip
@@ -308,8 +305,7 @@ class RottenPlugin < Plugin
                 rating = ""
             end
 
-            matches << sprintf("%s - %s %s", title, percent, rating).strip
-
+            movies << OpenStruct.new({:title => title, :percent => percent, :rating => rating})
         }
 
         rescue => ex
@@ -318,9 +314,13 @@ class RottenPlugin < Plugin
 
         end
 
-        (0..num).each { |i|
-            m.reply matches[i] if matches[i]
-            break if i == matches.size
+        if num < movies.size then
+            m.reply sprintf("displaying top %s of %s movies opening this weekend. use rt <num> to show more", num, movies.size)
+        end
+
+        num = 5 if num < 0
+        movies[0,num].each { |t|
+            m.reply sprintf("%s - %s = %s", t.title, t.percent, t.rating).strip
         }
 
     end
