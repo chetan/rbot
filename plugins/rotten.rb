@@ -29,7 +29,7 @@ class RottenPlugin < Plugin
         return "rotten|rt [num] [opening|upcoming|top|current|<movie title>] => ratings for movies opening this week, rt top => ratings for the current top movies, rt upcoming => advance ratings for upcoming movies, rt current => top recent releases, rt <movie title> => lookup rating for a movie"
     end
 
-    def rotten(m, params, url = false)
+    def do_rotten(m, params, show_url = false)
 
         num = params[:num].to_i if params[:num]
 
@@ -45,24 +45,34 @@ class RottenPlugin < Plugin
         elsif movie == 'current'
             opening m, params, @rss + "in_theaters.xml"
         else
-            search m, params, movie, url
+            search m, params, movie, show_url
         end
 
     end
 
-    def rturl(m, params)
-
-        rotten m, params, true
-
+    def do_rturl(m, params)
+        do_rotten(m, params, true)
     end
 
     def search(m, params, movie, show_url = false)
 
+        info = nil
+
         # first, search in the complete xml feed to see if its a current movie
-        info = search_xml(m, movie, show_url)
+        begin
+            info = search_xml(m, movie, show_url)
+        rescue => ex
+            m.reply "xml search failed: #{ex}"
+            error ([ex.to_s] + ex.backtrace).join("\n")
+        end
 
         # try searching the site
-        info = search_site(m, movie, show_url) if info.nil?
+        begin
+            info = search_site(m, movie, show_url) if info.nil?
+        rescue => ex
+            m.reply "site search failed: #{ex}"
+            error ([ex.to_s] + ex.backtrace).join("\n")
+        end
 
         # couldn't find anything
         return m.reply(sprintf("`%s' not found", movie)) if info.nil?
@@ -77,16 +87,22 @@ class RottenPlugin < Plugin
     end
 
     def search_xml(m, movie, show_url)
+        r = search_xml_feed("#{@rss}complete_movies.xml", m, movie, show_url)
+        r = search_xml_feed("#{@rss}opening.xml", m, movie, show_url) if not r
+        return r
+    end
 
-        xml = fetchurl(@rss + "complete_movies.xml")
+    def search_xml_feed(feed_url, m, movie, show_url)
+
+        xml = fetchurl(feed_url)
         unless xml
-            m.reply "faild to fetch feed"
+            warn "faild to fetch feed #{feed_url}"
             return nil
         end
 
         doc = Document.new xml
         unless doc
-            m.reply "rotten parse failed (invalid xml)"
+            m.reply "invalid xml returned from #{feed_url}"
             return nil
         end
 
@@ -115,7 +131,6 @@ class RottenPlugin < Plugin
         end
 
         return nil
-
     end
 
     def search_site(m, movie, show_url)
@@ -216,7 +231,7 @@ class RottenPlugin < Plugin
                 rd = movie_info.release_date.split(' ')[0..2].join(' ')
                 movie_info.release_date = Time.parse(rd)
             rescue => ex
-                puts ex
+                error ([ex.to_s] + ex.backtrace).join("\n")
             end
         end
 
@@ -296,8 +311,7 @@ class RottenPlugin < Plugin
 end
 
 plugin = RottenPlugin.new
-plugin.map 'rotten [:num] *movie', :action => 'rotten', :defaults => { :movie => nil, :num => 5 }, :requirements => { :num => %r|\d+| }
+plugin.map 'rotten [:num] *movie', :action => 'do_rotten', :defaults => { :movie => nil, :num => 5 }, :requirements => { :num => %r|\d+| }
+plugin.map 'rt [:num] *movie',     :action => 'do_rotten', :defaults => { :movie => nil, :num => 5 }, :requirements => { :num => %r|\d+| }
 
-plugin.map 'rt [:num] *movie', :action => 'rotten', :defaults => { :movie => nil, :num => 5 }, :requirements => { :num => %r|\d+| }
-
-plugin.map 'rturl *movie', :action => 'rturl', :defaults => { :movie => nil }
+plugin.map 'rturl *movie', :action => 'do_rturl', :defaults => { :movie => nil }
