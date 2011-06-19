@@ -40,15 +40,17 @@ def fetchurl(url)
 
     puts "< fetching: #{url}"
 
-    uri = URI.parse(URI.escape(url))
+    uri = url.kind_of?(String) ? URI.parse(URI.escape(url)) : url
     http = Net::HTTP.new(uri.host, uri.port)
-    html = http.start do |http|
+    http.start do |http|
         req = Net::HTTP::Get.new(uri.path + '?' + (uri.query || ''), {"User-Agent" => "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.0.10) Gecko/2009042315 Firefox/3.0.10"})
-        response = http.request(req)
-        response.body
+        res = http.request(req)
+        if res.key?('location') then
+            puts "< following redir: " + res['location']
+            return fetchurl(URI.join(uri.to_s, res['location']))
+        end
+        return res.body
     end
-
-    return html
 
 end
 

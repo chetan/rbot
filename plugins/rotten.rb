@@ -129,10 +129,24 @@ class RottenPlugin < Plugin
         return nil
     end
 
+    def scrape_page_title(html)
+        title_scraper = Scraper.define do
+            process_first "head title", :title => :text
+            result :title
+        end
+        return title_scraper.scrape(html)
+    end
+
     def search_site(m, movie)
 
         # second, try searching for the movie title
         html = fetchurl(@search + movie)
+
+        title = scrape_page_title(html)
+        if title !~ /search/i and title.strip =~ /^(.*?) - Rotten Tomatoes$/ then
+            # we were redirected to a movie page, use it
+            return scrape_movie_info(m, $1, nil, html)
+        end
 
         movie_scraper = Scraper.define do
 
@@ -167,30 +181,36 @@ class RottenPlugin < Plugin
     def get_movie_info(m, title, link)
 
         html = fetchurl(link)
-        if html.nil?
+        if html.nil? then
             debug "error fetching " + link
             return nil
         end
 
+        return scrape_movie_info(m, title, link, html)
+    end
+
+    def scrape_movie_info(m, title, link, html)
         movie_scraper = Scraper.define do
 
             array :info
 
-            process "div#all-critics-numbers p.critic_stats", :ratings => :text
-            process "div#all-critics-numbers span#all-critics-meter", :rating => :text
+            process "div#all-critics-numbers p.critic_stats",         :ratings    => :text
+            process "div#all-critics-numbers span#all-critics-meter", :rating     => :text
             process "div#top-critics-numbers span#all-critics-meter", :rating_top => :text
-            process "div#movie_stats span", :info => :text
+            process "div#movie_stats span",                           :info       => :text
+            process "link[rel=canonical]",                            :link       => "@href"
 
-            result :ratings, :rating, :rating_top, :info
-
+            result :link, :ratings, :rating, :rating_top, :info
         end
 
         info = movie_scraper.scrape(html)
 
-        movie_info = OpenStruct.new({:title => title,
-                                     :rating => info.rating.to_i,
+        movie_info = OpenStruct.new({:title      => title,
+                                     :rating     => info.rating.to_i,
                                      :rating_top => info.rating_top.to_i,
-                                     :link => link })
+                                     :link       => link || info.link
+                                     })
+
 
         if info.ratings then
             if info.ratings.match(/Reviews Counted: ?(\d+)/) then
