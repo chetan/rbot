@@ -287,7 +287,8 @@ class RottenPlugin < Plugin
         end
 
         (0..num).each { |i|
-            m.reply matches[i]
+            m.reply matches[i] if matches[i]
+            break if i == matches.size
         }
 
     end
