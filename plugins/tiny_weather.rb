@@ -72,12 +72,11 @@ class TinyWeatherPlugin < Plugin
 
         s = [ w.location ]
         date = Time.new
-        w.temps.each_with_index { |d, i|
-            next if i == 0
+        w.highs.each_with_index { |high, i|
+            next if i == 0 # skip todays forecast
             date += 86400
             day = date.strftime("%a")
-            high = w.temps[i] + "F"
-            precip = w.precips[i] + "%"
+            precip = w.precips[i]
             s << sprintf("%s: %s (%s)", day, high, precip) # Sun: 80F (10%)
             break if i == 6 # only want to show the next 6 days
         }
@@ -138,28 +137,39 @@ class TinyWeatherPlugin < Plugin
 
     def scrape_hourly_weather(zip)
 
-        html = fetchurl('http://www.weather.com/outlook/travel/businesstraveler/hourbyhour/graph/' + zip)
+        html = fetchurl("http://www.weather.com/weather/hourbyhour/graph/#{zip}?pagenum=2&nextbeginIndex=0")
 
         hour_scraper = Scraper.define do
-            process "div.hbhWxTime div", :hour => :text
-            process_first "div.hbhWxTemp div", :temp => :text
-            process_first "div.hbhWxPrecip div", :precip => :text
+            process "h3.wx-time", :hour => :text
+            process_first "div.wx-conditions p.wx-temp", :temp => :text
+            process_first "div.wx-details dl dd", :precip => :text
             result :hour, :temp, :precip
         end
 
         hourly_scraper = Scraper.define do
             array :hours
-            process "div.hbhWxHour", :hours => hour_scraper
-            process "div#hbhModulePad > h1 > span", :location => :text
+            process "div.wx-timepart", :hours => hour_scraper
+            process "div.wx-location-title > h1", :location => :text
             result :location, :hours
         end
         w = hourly_scraper.scrape(html)
         w.hours.each { |h|
-            h.temp.gsub!('&#176; ', '')
-            h.precip.gsub!("Precip:\n", '')
+            if h.hour =~ /^(\d+ [A-Z]{2})/ then
+              h.hour = $1
+              h.hour.downcase!
+            end
+            clean(h.temp, 'F')
+            clean(h.precip, '%')
         }
-        return w
 
+        w.location.gsub!(/\s+Weather\s*$/, '')
+        w.location.strip!
+
+        return w
+    end
+
+    def clean(str, replace='')
+      str.gsub!(/&#176;.?/, replace)
     end
 
     def scrape_weather_forecast(zip)
@@ -167,11 +177,12 @@ class TinyWeatherPlugin < Plugin
         html = fetchurl('http://www.weather.com/weather/tenday/' + zip)
 
         fc_scraper = Scraper.define do
-            array :temps, :precips
-            process "td.twc-forecast-temperature", :temps => :text
-            process "td.twc-line-precip", :precips => :text
-            process_first "h1#twc_loc_head", :location => :text
-            result :location, :temps, :precips
+            array :highs, :lows, :precips
+            process "p.wx-temp",     :highs => :text
+            process "p.wx-temp-alt", :lows  => :text
+            process "div.wx-details dl dd", :precips => :text
+            process_first "div.wx-location-title > h1", :location => :text
+            result :location, :highs, :lows, :precips
         end
 
         w = fc_scraper.scrape(html)
@@ -180,11 +191,10 @@ class TinyWeatherPlugin < Plugin
         w.location.gsub!(/\s+Weather\s*$/, '')
         w.location.strip!
 
-        w.temps = w.temps[0,10] # first 10 are high temps
-        w.temps.first.gsub!(/F High/, '')
-        w.temps.each { |t| t.gsub!('&#176;', '') }
-
-        w.precips = w.precips.map { |t| t =~ /(\d+)/; $1 }
+        w.highs.each { |h| clean(h, 'F') }
+        w.lows.each { |h| clean(h, 'F') }
+        w.precips.each { |h| clean(h, '%') }
+        w.precips = w.precips.find_all { |h| h =~ /%$/ }
 
         return w
     end
