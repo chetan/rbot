@@ -18,60 +18,81 @@ class BoxOffficePlugin < Plugin
   def boxoffice_movie(m, params)
 
     movie = params[:movie].join(' ').downcase
-    html = fetchurl('http://www.boxofficemojo.com/search/?p=.htm&q=' + movie)
+    html = fetchurl('http://www.boxofficemojo.com/search/?q=' + movie)
 
-    found = false
-    a = nil
-    movies = Array.new
-    html.scan(/<a href="(\/movies\/\?id=.*?.htm)">(.*?)<\/a>.*?<a href="\/schedule\/\?view=.*?">(.*?)<\/a>/m) { |a|
-      if a[1].downcase == movie
-        found = true
-        break
+    row_scraper = Scraper.define do
+      array :cols
+      process "td", :cols => :text
+      result :cols
+    end
+
+    table_scraper = Scraper.define do
+      array :rows
+      process "tr", :rows => row_scraper
+      result :rows
+    end
+
+    search_scraper = Scraper.define do
+      array :table
+      process "div#body table:nth-child(5)", :table => table_scraper
+      result :table
+    end
+
+    ret = search_scraper.scrape(html)
+    rows = ret.first
+
+    # verify we got the right table/data
+    begin
+      if rows.first.first.downcase !~ /^movie title/ then
+        raise "bad data"
       end
-      movies << [ a ]
-    }
-
-    if found
-      # found it, show score
-      lookup_movie(m, a[1], 'http://www.boxofficemojo.com' + a[0])
+      rows.shift # discart first row
+    rescue Exception => ex
+      # will raise on nil, etc as well
+      m.reply "error parsing data"
       return
+    end
 
-    else
-
-      # no exact match, print some choices
-      if movies.length == 0
-        m.reply 'error, salman needs to take a shower'
-        return
+    # look for exact match first
+    found = nil
+    rows.each do |row|
+      if row.first.strip.downcase == movie then
+        found = row
       end
+    end
 
-      # show the first hit
-      a = movies[0][0]
-      lookup_movie(m, a[1], 'http://www.boxofficemojo.com' + a[0])
+    # take first match if none found
+    match = found || rows.first
 
+    # [0] "Movie Title (click title to view)",
+    # [1] "Studio",
+    # [2] "Lifetime Gross
+    # [3] Theaters",
+    # [4] "Opening
+    # [5] Theaters",
+    # [6] "Release",
+    # [7] "Links"
+
+    m.reply sprintf("%s (%s) - %s Lifetime Gross / %s Opening", match.first.strip, match[6], match[2], match[4])
+
+    # show list of other matches
+    if found.nil? and rows.size > 1 then
+      others = []
+      rows.each do |row|
+        if row.first != match.first then
+          others << row.first.strip
+        end
+      end
+      m.reply sprintf("Other matches: %s", others.join(", "))
     end
 
   end
 
-  # return the actual boxoffice numbers from the given link
-  def lookup_movie(m, title, link)
-
-    html = fetchurl(link)
-    if html.nil?
-      debug "error fetching " + link
-      return
-    end
-
-    numbers =  html.scan(/<td width="35%" align="right"><b>&nbsp;(.*?)(<\/b>)?<\/td>/)
-    opening = html.scan(/<td align="center">Opening&nbsp;Weekend:<\/td><td><b>&nbsp;(.*?)<\/b><\/td><\/tr>/)
-    budget = html.scan(/<td>Production Budget: <b>(.*?)<\/b><\/td>/)
-
-    if numbers.length == 3 then
-      m.reply(sprintf('%s - %s Domestic (%s Opening), %s Total, Budget: %s', title, numbers[0][0], opening[0],numbers[2][0], budget[0]))
-    elsif numbers.length >= 1 then
-      m.reply(sprintf('%s - %s Domestic (%s Opening), Budget: %s', title, numbers[0][0], opening[0], budget[0]))
-    end
-
-  end
+    # if numbers.length == 3 then
+    #   m.reply(sprintf('%s - %s Domestic (%s Opening), %s Total, Budget: %s', title, numbers[0][0], opening[0],numbers[2][0], budget[0]))
+    # elsif numbers.length >= 1 then
+    #   m.reply(sprintf('%s - %s Domestic (%s Opening), Budget: %s', title, numbers[0][0], opening[0], budget[0]))
+    # end
 
     # get weekly box office chart numbers
   def boxoffice_chart(m, params)
