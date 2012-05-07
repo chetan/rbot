@@ -11,6 +11,7 @@ require 'scrapi'
 require 'yaml'
 require 'htmlentities'
 require 'ostruct'
+require 'awesome_print'
 
 class Array
 
