@@ -142,7 +142,7 @@ class TinyWeatherPlugin < Plugin
         hour_scraper = Scraper.define do
             process "h3.wx-time", :hour => :text
             process_first "div.wx-conditions p.wx-temp", :temp => :text
-            process_first "div.wx-details dl:nth-child(2) dd", :precip => :text
+            process_first "div.wx-details dl:nth-child(3) dd", :precip => :text
             result :hour, :temp, :precip
         end
 
