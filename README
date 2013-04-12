@@ -4,6 +4,7 @@ Brian Ploch  :: http://github.com/ploch
 My Plugins for rbot - a Ruby IRC bot :: http://www.ruby-rbot.org/
 
 * bo.rb (boxoffice) - Movie box office information
+* bitcoin.rb - Bitcoin price lookup from mtgox
 * debt.rb - Looks up the US national debt
 * dvd_release.rb - Lookup recent or upcoming dvd releases
 * fmylife.rb - Get posts from fmylife.com
